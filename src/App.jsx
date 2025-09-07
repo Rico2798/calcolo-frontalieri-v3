@@ -128,6 +128,9 @@ export default function App(){
   const [profile, setProfile] = useState({ residenceCountry: 'IT', regime: 'FR_IT_OLD', workCanton: 'TI' });
   const [months, setMonths] = useState(13);
   const [has14, setHas14] = useState(false);
+// Mostra barra Anteprima e footer debug solo in sviluppo
+const isDev = import.meta.env && import.meta.env.DEV; // ⬅️
+
 
   const [chBase] = useState({ ahvIvEoPerc: 0.053, alvPerc: 0.011, lppPerc: 0.055, nbuPerc: 0.01 });
   const [regimes, setRegimes] = useState({
@@ -187,18 +190,21 @@ export default function App(){
               <button onClick={()=>setMode('N2G')} style={{padding:'8px 12px', border:'none', background: mode==='N2G'?'#0ea5e9':'transparent', color: mode==='N2G'?'#fff':'#0f172a'}}>Netto → Lordo</button>
             </div>
           </div>
-          {/* Toolbar viewport preview */}
-          <div style={{maxWidth:1200, margin:'0 auto', padding:'8px 16px 12px 16px', display:'flex', gap:8, alignItems:'center'}}>
-            <span style={{fontSize:12,color:'#64748b'}}>Anteprima:</span>
-            {['mobile','tablet','desktop'].map(v => (
-              <button key={v}
-                onClick={()=>setViewport(v)}
-                style={{padding:'6px 10px', border:'1px solid #e2e8f0', borderRadius:10, background: viewport===v?'#0ea5e9':'#fff', color: viewport===v?'#fff':'#0f172a'}}>
-                {v==='mobile'?'Smartphone':v==='tablet'?'Tablet':'Desktop'}
-              </button>
-            ))}
-          </div>
-        </div>
+{/* Toolbar viewport preview */}
+{isDev && (
+  <div style={{maxWidth:1200, margin:'0 auto', padding:'8px 16px 12px 16px', display:'flex', gap:8, alignItems:'center'}}>
+    <span style={{fontSize:12,color:'#64748b'}}>Anteprima:</span>
+    {['mobile','tablet','desktop'].map(v => (
+      <button
+        key={v}
+        onClick={()=>setViewport(v)}
+        style={{padding:'6px 10px', border:'1px solid #e2e8f0', borderRadius:10, background: viewport===v?'#0ea5e9':'#fff', color: viewport===v?'#fff':'#0f172a'}}>
+        {v==='mobile'?'Smartphone':v==='tablet'?'Tablet':'Desktop'}
+      </button>
+    ))}
+  </div>
+)}
+
 
         {/* Viewport container */}
         <div style={{display:'grid', placeItems:'start center', padding:'12px 16px'}}>
@@ -431,11 +437,9 @@ export default function App(){
           ); })()}
         </div>
 
-        {/* Footer debug */}
-        <div style={{maxWidth:1200, margin:'0 auto', padding:'12px 16px', fontSize:12, color:'#64748b'}}>
-          Regime: <b>{profile.regime}</b> • Residenza: <b>{profile.residenceCountry}</b> • Modalità: <b>{mode}</b> • Viewport: <b>{viewport}</b>
-        </div>
-      </div>
-    </ErrorBoundary>
-  );
-}
+{/* Footer debug */}
+{isDev && (
+  <div style={{maxWidth:1200, margin:'0 auto', padding:'12px 16px', fontSize:12, color:'#64748b'}}>
+    Regime: <b>{profile.regime}</b> • Residenza: <b>{profile.residenceCountry}</b> • Modalità: <b>{mode}</b> • Viewport: <b>{viewport}</b>
+  </div>
+)}
