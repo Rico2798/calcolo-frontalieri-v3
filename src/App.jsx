@@ -1,8 +1,6 @@
-// ✅ Web App – Calcolatore Frontalieri (V3)
-// === Versione 3 — salvata il 2025-09-06 ===
-// Fix critico: chiusure JSX errate in <section> (errore: Expected corresponding JSX closing tag)
-// - Ricomposta la sezione "Parametri regime" senza duplicati e con tag bilanciati
-// - Mantiene tutte le funzioni richieste (viewport mobile/tablet/desktop, impostazioni su una riga, stepper mensilità, addizionali Italia, inversione Netto→Lordo, test nascosti)
+// ✅ Web App – Calcolatore Frontalieri (V3.3 Hotfix)
+// - Fix JSX: rimosso `</div}` errato e chiusure bilanciate.
+// - Barra "Anteprima" e footer debug SOLO in sviluppo (Vite DEV).
 
 import React, { useMemo, useState, useEffect } from "react";
 
@@ -128,9 +126,9 @@ export default function App(){
   const [profile, setProfile] = useState({ residenceCountry: 'IT', regime: 'FR_IT_OLD', workCanton: 'TI' });
   const [months, setMonths] = useState(13);
   const [has14, setHas14] = useState(false);
-// Mostra barra Anteprima e footer debug solo in sviluppo
-const isDev = import.meta.env && import.meta.env.DEV; // ⬅️
 
+  // Solo DEV: mostra barra anteprima e footer debug
+  const isDev = import.meta?.env?.DEV;
 
   const [chBase] = useState({ ahvIvEoPerc: 0.053, alvPerc: 0.011, lppPerc: 0.055, nbuPerc: 0.01 });
   const [regimes, setRegimes] = useState({
@@ -190,256 +188,266 @@ const isDev = import.meta.env && import.meta.env.DEV; // ⬅️
               <button onClick={()=>setMode('N2G')} style={{padding:'8px 12px', border:'none', background: mode==='N2G'?'#0ea5e9':'transparent', color: mode==='N2G'?'#fff':'#0f172a'}}>Netto → Lordo</button>
             </div>
           </div>
-{/* Toolbar viewport preview */}
-{isDev && (
-  <div style={{maxWidth:1200, margin:'0 auto', padding:'8px 16px 12px 16px', display:'flex', gap:8, alignItems:'center'}}>
-    <span style={{fontSize:12,color:'#64748b'}}>Anteprima:</span>
-    {['mobile','tablet','desktop'].map(v => (
-      <button
-        key={v}
-        onClick={()=>setViewport(v)}
-        style={{padding:'6px 10px', border:'1px solid #e2e8f0', borderRadius:10, background: viewport===v?'#0ea5e9':'#fff', color: viewport===v?'#fff':'#0f172a'}}>
-        {v==='mobile'?'Smartphone':v==='tablet'?'Tablet':'Desktop'}
-      </button>
-    ))}
-  </div>
-)}
 
+          {/* Toolbar viewport preview - SOLO in DEV */}
+          {isDev && (
+            <div style={{maxWidth:1200, margin:'0 auto', padding:'8px 16px 12px 16px', display:'flex', gap:8, alignItems:'center'}}>
+              <span style={{fontSize:12,color:'#64748b'}}>Anteprima:</span>
+              {['mobile','tablet','desktop'].map(v => (
+                <button key={v}
+                  onClick={()=>setViewport(v)}
+                  style={{padding:'6px 10px', border:'1px solid #e2e8f0', borderRadius:10, background: viewport===v?'#0ea5e9':'#fff', color: viewport===v?'#fff':'#0f172a'}}>
+                  {v==='mobile'?'Smartphone':v==='tablet'?'Tablet':'Desktop'}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Viewport container */}
         <div style={{display:'grid', placeItems:'start center', padding:'12px 16px'}}>
-          {(() => { const width = viewport==='mobile' ? 390 : viewport==='tablet' ? 768 : 1200; const radius = viewport==='desktop' ? 0 : 24; const border = viewport==='desktop' ? 'none' : '1px solid #e2e8f0'; const shadow = viewport==='desktop' ? 'none' : '0 10px 30px rgba(2,6,23,0.08)'; return (
-            <div style={{width, maxWidth:'100%', border, borderRadius:radius, boxShadow:shadow, overflow:'hidden', background:'#fff'}}>
-              <main style={{maxWidth:1200, margin:'0 auto', padding:'24px 16px', display:'grid', gap:24}}>
+          {(() => {
+            const width = viewport==='mobile' ? 390 : viewport==='tablet' ? 768 : 1200;
+            const radius = viewport==='desktop' ? 0 : 24;
+            const border = viewport==='desktop' ? 'none' : '1px solid #e2e8f0';
+            const shadow = viewport==='desktop' ? 'none' : '0 10px 30px rgba(2,6,23,0.08)';
+            return (
+              <div style={{width, maxWidth:'100%', border, borderRadius:radius, boxShadow:shadow, overflow:'hidden', background:'#fff'}}>
+                <main style={{maxWidth:1200, margin:'0 auto', padding:'24px 16px', display:'grid', gap:24}}>
 
-                {/* Impostazioni */}
-                <section style={{border:'1px solid #e2e8f0', borderRadius:16, background:'#fff'}}>
-                  <div style={{padding:'12px 16px', borderBottom:'1px solid #e2e8f0', fontWeight:600}}>Impostazioni</div>
-                  <div style={{padding:16, display:'grid', gridTemplateColumns: viewport==='desktop' ? '200px 220px 160px minmax(280px,1fr) 140px' : 'repeat(auto-fit, minmax(220px,1fr))', gap:12, alignItems:'start', maxWidth: viewport==='desktop' ? 1080 : undefined, margin: viewport==='desktop' ? '0 auto' : undefined}}>
-                    {/* Paese */}
-                    <div style={{display:'grid', gap:4}}>
-                      <label style={{fontSize:12,color:'#475569'}}>Paese di residenza</label>
-                      <select value={profile.residenceCountry} onChange={(e)=>setProfile(prev=>({ ...prev, residenceCountry:e.target.value }))} style={{border:'1px solid #cbd5e1', borderRadius:12, padding:'6px 8px', width:'100%'}}>
-                        <option value="IT">Italia</option>
-                        <option value="FR">Francia</option>
-                        <option value="DE">Germania</option>
-                      </select>
-                    </div>
-                    {/* Regime */}
-                    <div style={{display:'grid', gap:4}}>
-                      <label style={{fontSize:12,color:'#475569'}}>Regime</label>
-                      <select value={profile.regime} onChange={(e)=>setProfile(prev=>({ ...prev, regime:e.target.value }))} style={{border:'1px solid #cbd5e1', borderRadius:12, padding:'6px 8px', width:'100%'}}>
-                        <option value="FR_IT_NEW">Frontaliere (nuovo)</option>
-                        <option value="FR_IT_OLD">Frontaliere (vecchio)</option>
-                        <option value="RES_B">Residente CH B</option>
-                        <option value="RES_C">Residente CH C</option>
-                        <option value="FR_FR">Frontaliere Francia</option>
-                        <option value="FR_DE">Frontaliere Germania</option>
-                      </select>
-                    </div>
-                    {/* Canton */}
-                    <div style={{display:'grid', gap:4}}>
-                      <label style={{fontSize:12,color:'#475569'}}>Canton di lavoro</label>
-                      <select value={profile.workCanton} onChange={(e)=>setProfile(prev=>({ ...prev, workCanton:e.target.value }))} style={{border:'1px solid #cbd5e1', borderRadius:12, padding:'6px 8px', width:'100%'}}>
-                        {['TI','GR','VS','GE','BS','BL','JU','SH','ZH','SG','VD','NE'].map(c=> <option key={c} value={c}>{c}</option>)}
-                      </select>
-                    </div>
-                    {/* Mensilità */}
-                    <div style={{display:'grid', gap:8}}>
-                      <div style={{fontSize:12,color:'#475569'}}>Mensilità</div>
-                      <div style={{display:'flex', alignItems:'center', gap:8, flexWrap:'wrap'}}>
-                        <button aria-label="-1" onClick={()=> setMonths(m=> Math.max(12, Math.min(14, (m||12)-1)))} style={{width:32,height:32,border:'1px solid #cbd5e1',borderRadius:10,background:'#fff'}}>–</button>
-                        <input
-                          type="number"
-                          min={12}
-                          max={14}
-                          step={1}
-                          value={months}
-                          onChange={(e)=>{ const n = Number(e.target.value); if(Number.isFinite(n)) setMonths(Math.max(12, Math.min(14, n))); }}
-                          style={{width:72,textAlign:'center',border:'1px solid #cbd5e1',borderRadius:12,padding:'8px 10px'}}
-                          inputMode="numeric"
-                        />
-                        <button aria-label="+1" onClick={()=> setMonths(m=> Math.max(12, Math.min(14, (m||12)+1)))} style={{width:32,height:32,border:'1px solid #cbd5e1',borderRadius:10,background:'#fff'}}>+</button>
-                        <label style={{display:'flex', alignItems:'center', gap:8, fontSize:14, whiteSpace:'normal'}}>
-                          <input type="checkbox" checked={has14} onChange={(e)=>setHas14(e.target.checked)} /> 14ª mensilità
-                        </label>
-                      </div>
-                      <div style={{fontSize:12,color:'#64748b', display: viewport==='desktop' ? 'none' : 'block'}}>Valori ammessi: 12–14. Se attivi la 14ª, il calcolo usa comunque {String('{')}Math.max(months,14){String('}')}. </div>
-                    </div>
-                    {/* FX */}
-                    <div style={{minWidth:160}}>
-                      <div style={{fontSize:12,color:'#475569'}}>Cambio CHF→EUR</div>
-                      <NumberField id="fx" label="" value={fx.chfToEur} onChange={(v)=>setFx({ chfToEur: v || 1 })} step={0.01} suffix="×" width={120} />
-                    </div>
-                  </div>
-                </section>
-
-                {/* Addizionali Italia (condizionale) */}
-                {(profile.residenceCountry==='IT' && profile.regime==='FR_IT_NEW') && (
+                  {/* Impostazioni */}
                   <section style={{border:'1px solid #e2e8f0', borderRadius:16, background:'#fff'}}>
-                    <div style={{padding:'12px 16px', borderBottom:'1px solid #e2e8f0', fontWeight:600}}>Addizionali Italia</div>
-                    <div style={{padding:16, display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(220px,1fr))', gap:16, alignItems:'end'}}>
-                      <div style={{gridColumn:'1 / -1', background:'#f8fafc', border:'1px solid #e2e8f0', borderRadius:12, padding:12, fontSize:14, color:'#334155'}}>
-                        Le addizionali <b>regionale</b> e <b>comunale</b> sono stime su imponibile italiano (dopo franchigia) e non sono coperte dal credito per imposte estere.
+                    <div style={{padding:'12px 16px', borderBottom:'1px solid #e2e8f0', fontWeight:600}}>Impostazioni</div>
+                    <div style={{padding:16, display:'grid', gridTemplateColumns: viewport==='desktop' ? '200px 220px 160px minmax(280px,1fr) 140px' : 'repeat(auto-fit, minmax(220px,1fr))', gap:12, alignItems:'start', maxWidth: viewport==='desktop' ? 1080 : undefined, margin: viewport==='desktop' ? '0 auto' : undefined}}>
+                      {/* Paese */}
+                      <div style={{display:'grid', gap:4}}>
+                        <label style={{fontSize:12,color:'#475569'}}>Paese di residenza</label>
+                        <select value={profile.residenceCountry} onChange={(e)=>setProfile(prev=>({ ...prev, residenceCountry:e.target.value }))} style={{border:'1px solid #cbd5e1', borderRadius:12, padding:'6px 8px', width:'100%'}}>
+                          <option value="IT">Italia</option>
+                          <option value="FR">Francia</option>
+                          <option value="DE">Germania</option>
+                        </select>
                       </div>
-                      <label style={{display:'flex',alignItems:'center',gap:8}}>
-                        <input type="checkbox" checked={itAddiz.enable} onChange={(e)=>setItAddiz(prev=>({ ...prev, enable: e.target.checked }))} />
-                        Applica addizionali IRPEF
-                      </label>
-                      <div>
-                        <div style={{fontSize:12,color:'#475569'}}>Regione (facoltativa)</div>
-                        <input placeholder="Es. Lombardia" value={itAddiz.region} onChange={(e)=>setItAddiz(prev=>({ ...prev, region: e.target.value }))} style={{border:'1px solid #cbd5e1',borderRadius:12,padding:'8px 10px', width:180}} />
+                      {/* Regime */}
+                      <div style={{display:'grid', gap:4}}>
+                        <label style={{fontSize:12,color:'#475569'}}>Regime</label>
+                        <select value={profile.regime} onChange={(e)=>setProfile(prev=>({ ...prev, regime:e.target.value }))} style={{border:'1px solid #cbd5e1', borderRadius:12, padding:'6px 8px', width:'100%'}}>
+                          <option value="FR_IT_NEW">Frontaliere (nuovo)</option>
+                          <option value="FR_IT_OLD">Frontaliere (vecchio)</option>
+                          <option value="RES_B">Residente CH B</option>
+                          <option value="RES_C">Residente CH C</option>
+                          <option value="FR_FR">Frontaliere Francia</option>
+                          <option value="FR_DE">Frontaliere Germania</option>
+                        </select>
                       </div>
-                      <div>
-                        <div style={{fontSize:12,color:'#475569'}}>Comune (facoltativo)</div>
-                        <input placeholder="Es. Como" value={itAddiz.municipality} onChange={(e)=>setItAddiz(prev=>({ ...prev, municipality: e.target.value }))} style={{border:'1px solid #cbd5e1',borderRadius:12,padding:'8px 10px', width:180}} />
+                      {/* Canton */}
+                      <div style={{display:'grid', gap:4}}>
+                        <label style={{fontSize:12,color:'#475569'}}>Canton di lavoro</label>
+                        <select value={profile.workCanton} onChange={(e)=>setProfile(prev=>({ ...prev, workCanton:e.target.value }))} style={{border:'1px solid #cbd5e1', borderRadius:12, padding:'6px 8px', width:'100%'}}>
+                          {['TI','GR','VS','GE','BS','BL','JU','SH','ZH','SG','VD','NE'].map(c=> <option key={c} value={c}>{c}</option>)}
+                        </select>
                       </div>
-                      <PercentField id="regRate" label="Aliquota regionale" value={itAddiz.regionalRate} onChange={(v)=>setItAddiz(prev=>({ ...prev, regionalRate: v }))} />
-                      <PercentField id="munRate" label="Aliquota comunale" value={itAddiz.municipalRate} onChange={(v)=>setItAddiz(prev=>({ ...prev, municipalRate: v }))} />
+                      {/* Mensilità */}
+                      <div style={{display:'grid', gap:8}}>
+                        <div style={{fontSize:12,color:'#475569'}}>Mensilità</div>
+                        <div style={{display:'flex', alignItems:'center', gap:8, flexWrap:'wrap'}}>
+                          <button aria-label="-1" onClick={()=> setMonths(m=> Math.max(12, Math.min(14, (m||12)-1)))} style={{width:32,height:32,border:'1px solid #cbd5e1',borderRadius:10,background:'#fff'}}>–</button>
+                          <input
+                            type="number"
+                            min={12}
+                            max={14}
+                            step={1}
+                            value={months}
+                            onChange={(e)=>{ const n = Number(e.target.value); if(Number.isFinite(n)) setMonths(Math.max(12, Math.min(14, n))); }}
+                            style={{width:72,textAlign:'center',border:'1px solid #cbd5e1',borderRadius:12,padding:'8px 10px'}}
+                            inputMode="numeric"
+                          />
+                          <button aria-label="+1" onClick={()=> setMonths(m=> Math.max(12, Math.min(14, (m||12)+1)))} style={{width:32,height:32,border:'1px solid #cbd5e1',borderRadius:10,background:'#fff'}}>+</button>
+                          <label style={{display:'flex', alignItems:'center', gap:8, fontSize:14, whiteSpace:'normal'}}>
+                            <input type="checkbox" checked={has14} onChange={(e)=>setHas14(e.target.checked)} /> 14ª mensilità
+                          </label>
+                        </div>
+                        <div style={{fontSize:12,color:'#64748b', display: viewport==='desktop' ? 'none' : 'block'}}>Valori ammessi: 12–14. Se attivi la 14ª, il calcolo usa comunque {String('{')}Math.max(months,14){String('}')}. </div>
+                      </div>
+                      {/* FX */}
+                      <div style={{minWidth:160}}>
+                        <div style={{fontSize:12,color:'#475569'}}>Cambio CHF→EUR</div>
+                        <NumberField id="fx" label="" value={fx.chfToEur} onChange={(v)=>setFx({ chfToEur: v || 1 })} step={0.01} suffix="×" width={120} />
+                      </div>
                     </div>
                   </section>
-                )}
 
-                {/* Retribuzione */}
-                <section style={{border:'1px solid #e2e8f0', borderRadius:16, background:'#fff'}}>
-                  <div style={{padding:'12px 16px', borderBottom:'1px solid #e2e8f0', fontWeight:600}}>Retribuzione</div>
-                  <div style={{padding:16, display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(220px,1fr))', gap:16}}>
-                    {mode==='G2N' ? (
-                      <>
-                        <NumberField id="gross" label="Lordo mensile" value={pay.grossMonthlyCHF} onChange={(v)=>setPay(prev=>({ ...prev, grossMonthlyCHF: v }))} suffix="CHF" step={50} />
-                        <NumberField id="allow" label="Indennità/bonus annui" value={pay.allowancesCHF} onChange={(v)=>setPay(prev=>({ ...prev, allowancesCHF: v }))} suffix="CHF" step={50} />
-                        <NumberField id="dep" label="Familiari a carico" value={pay.dependents} onChange={(v)=>setPay(prev=>({ ...prev, dependents: v }))} step={1} />
-                        <ReadOnlyField label="Mensilità effettive" value={`${effectiveMonths}`} />
-                      </>
-                    ) : (
-                      <>
-                        <NumberField id="netTarget" label="Netto mensile desiderato" value={targetNetMonthly} onChange={setTargetNetMonthly} suffix="CHF" step={25} />
-                        <ReadOnlyField label="Lordo mensile stimato" value={fmtCHF(invertedGross)} />
-                        <div style={{display:'flex',alignItems:'end'}}>
-                          <button onClick={()=> setPay(prev=>({ ...prev, grossMonthlyCHF: Math.round(invertedGross) }))} style={{padding:'8px 12px',borderRadius:12,border:'1px solid #cbd5e1',background:'#f1f5f9'}}>Usa questo lordo</button>
+                  {/* Addizionali Italia (condizionale) */}
+                  {(profile.residenceCountry==='IT' && profile.regime==='FR_IT_NEW') && (
+                    <section style={{border:'1px solid #e2e8f0', borderRadius:16, background:'#fff'}}>
+                      <div style={{padding:'12px 16px', borderBottom:'1px solid #e2e8f0', fontWeight:600}}>Addizionali Italia</div>
+                      <div style={{padding:16, display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(220px,1fr))', gap:16, alignItems:'end'}}>
+                        <div style={{gridColumn:'1 / -1', background:'#f8fafc', border:'1px solid #e2e8f0', borderRadius:12, padding:12, fontSize:14, color:'#334155'}}>
+                          Le addizionali <b>regionale</b> e <b>comunale</b> sono stime su imponibile italiano (dopo franchigia) e non sono coperte dal credito per imposte estere.
                         </div>
-                      </>
-                    )}
-                  </div>
-                </section>
-
-                {/* Parametri regime dinamici */}
-                <section style={{border:'1px solid #e2e8f0', borderRadius:16, background:'#fff'}}>
-                  <div style={{padding:'12px 16px', borderBottom:'1px solid #e2e8f0', fontWeight:600}}>Parametri regime: {regimes[profile.regime]?.label}</div>
-                  <div style={{padding:16, display:'grid', gridTemplateColumns: viewport==='mobile' ? '1fr' : viewport==='tablet' ? 'repeat(2, minmax(0,1fr))' : 'repeat(3, minmax(0,1fr))', gap:16}}>
-                    {/* Imposta alla fonte - SEMPRE visibile */}
-                    <PercentField
-                      id="srcRate"
-                      label="Imposta alla fonte CH"
-                      value={regimes[profile.regime]?.sourceTaxRate ?? 0}
-                      onChange={(v)=> setRegimes(prev=>({ ...prev, [profile.regime]: { ...prev[profile.regime], sourceTaxRate: v } }))}
-                      width={viewport==='mobile' ? '100%' : undefined}
-                    />
-
-                    {/* Nota vecchio frontaliero */}
-                    {profile.regime==='FR_IT_OLD' && (
-                      <div style={{gridColumn:'1 / -1', background:'#fffbeb', border:'1px solid #fde68a', borderRadius:12, padding:12, color:'#92400e', fontSize:14}}>
-                        Vecchio Frontaliero: <b>tassazione esclusiva in Svizzera</b>. IRPEF Italia non dovuta nel modello semplificato.
+                        <label style={{display:'flex',alignItems:'center',gap:8}}>
+                          <input type="checkbox" checked={itAddiz.enable} onChange={(e)=>setItAddiz(prev=>({ ...prev, enable: e.target.checked }))} />
+                          Applica addizionali IRPEF
+                        </label>
+                        <div>
+                          <div style={{fontSize:12,color:'#475569'}}>Regione (facoltativa)</div>
+                          <input placeholder="Es. Lombardia" value={itAddiz.region} onChange={(e)=>setItAddiz(prev=>({ ...prev, region: e.target.value }))} style={{border:'1px solid #cbd5e1',borderRadius:12,padding:'8px 10px', width:180}} />
+                        </div>
+                        <div>
+                          <div style={{fontSize:12,color:'#475569'}}>Comune (facoltativo)</div>
+                          <input placeholder="Es. Como" value={itAddiz.municipality} onChange={(e)=>setItAddiz(prev=>({ ...prev, municipality: e.target.value }))} style={{border:'1px solid #cbd5e1',borderRadius:12,padding:'8px 10px', width:180}} />
+                        </div>
+                        <PercentField id="regRate" label="Aliquota regionale" value={itAddiz.regionalRate} onChange={(v)=>setItAddiz(prev=>({ ...prev, regionalRate: v }))} />
+                        <PercentField id="munRate" label="Aliquota comunale" value={itAddiz.municipalRate} onChange={(v)=>setItAddiz(prev=>({ ...prev, municipalRate: v }))} />
                       </div>
-                    )}
+                    </section>
+                  )}
 
-                    {/* Parametri specifici NUOVO frontaliero (Italia) */}
-                    {profile.regime==='FR_IT_NEW' && (
-                      <>
-                        <PercentField
-                          id="srcFactor"
-                          label="Quota imposta alla fonte (80%)"
-                          value={regimes.FR_IT_NEW.sourceFactor ?? 0}
-                          onChange={(v)=> setRegimes(prev=>({ ...prev, FR_IT_NEW: { ...prev.FR_IT_NEW, sourceFactor: v } }))}
-                          width={viewport==='mobile' ? '100%' : undefined}
-                        />
-                        <NumberField
-                          id="itAllowance"
-                          label="Franchigia italiana"
-                          value={regimes.FR_IT_NEW.itAllowanceEUR ?? 0}
-                          onChange={(v)=> setRegimes(prev=>({ ...prev, FR_IT_NEW: { ...prev.FR_IT_NEW, itAllowanceEUR: v } }))}
-                          suffix="EUR"
-                          step={100}
-                          width={viewport==='mobile' ? '100%' : undefined}
-                        />
-                        <PercentField
-                          id="itEff"
-                          label="Aliquota IRPEF eff."
-                          value={regimes.FR_IT_NEW.itEffRate ?? 0}
-                          onChange={(v)=> setRegimes(prev=>({ ...prev, FR_IT_NEW: { ...prev.FR_IT_NEW, itEffRate: v } }))}
-                          width={viewport==='mobile' ? '100%' : undefined}
-                        />
-                        <PercentField
-                          id="itCredShare"
-                          label="Quota credito"
-                          value={regimes.FR_IT_NEW.itTaxCreditShare ?? 0}
-                          onChange={(v)=> setRegimes(prev=>({ ...prev, FR_IT_NEW: { ...prev.FR_IT_NEW, itTaxCreditShare: v } }))}
-                          width={viewport==='mobile' ? '100%' : undefined}
-                        />
-                      </>
-                    )}
+                  {/* Retribuzione */}
+                  <section style={{border:'1px solid #e2e8f0', borderRadius:16, background:'#fff'}}>
+                    <div style={{padding:'12px 16px', borderBottom:'1px solid #e2e8f0', fontWeight:600}}>Retribuzione</div>
+                    <div style={{padding:16, display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(220px,1fr))', gap:16}}>
+                      {mode==='G2N' ? (
+                        <>
+                          <NumberField id="gross" label="Lordo mensile" value={pay.grossMonthlyCHF} onChange={(v)=>setPay(prev=>({ ...prev, grossMonthlyCHF: v }))} suffix="CHF" step={50} />
+                          <NumberField id="allow" label="Indennità/bonus annui" value={pay.allowancesCHF} onChange={(v)=>setPay(prev=>({ ...prev, allowancesCHF: v }))} suffix="CHF" step={50} />
+                          <NumberField id="dep" label="Familiari a carico" value={pay.dependents} onChange={(v)=>setPay(prev=>({ ...prev, dependents: v }))} step={1} />
+                          <ReadOnlyField label="Mensilità effettive" value={`${effectiveMonths}`} />
+                        </>
+                      ) : (
+                        <>
+                          <NumberField id="netTarget" label="Netto mensile desiderato" value={targetNetMonthly} onChange={setTargetNetMonthly} suffix="CHF" step={25} />
+                          <ReadOnlyField label="Lordo mensile stimato" value={fmtCHF(invertedGross)} />
+                          <div style={{display:'flex',alignItems:'end'}}>
+                            <button onClick={()=> setPay(prev=>({ ...prev, grossMonthlyCHF: Math.round(invertedGross) }))} style={{padding:'8px 12px',borderRadius:12,border:'1px solid #cbd5e1',background:'#f1f5f9'}}>Usa questo lordo</button>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </section>
 
-                    {/* Parametri per FR/DE */}
-                    {(profile.regime==='FR_DE' || profile.regime==='FR_FR') && (
-                      <>
-                        <PercentField
-                          id="homeRate"
-                          label="Aliquota paese di residenza (eff.)"
-                          value={regimes[profile.regime]?.homeTaxRate ?? 0}
-                          onChange={(v)=> setRegimes(prev=>({ ...prev, [profile.regime]: { ...prev[profile.regime], homeTaxRate: v } }))}
-                          width={viewport==='mobile' ? '100%' : undefined}
-                        />
-                        <PercentField
-                          id="creditShare"
-                          label="Quota credito su fonte"
-                          value={regimes[profile.regime]?.creditShare ?? 0}
-                          onChange={(v)=> setRegimes(prev=>({ ...prev, [profile.regime]: { ...prev[profile.regime], creditShare: v } }))}
-                          width={viewport==='mobile' ? '100%' : undefined}
-                        />
-                      </>
-                    )}
-                  </div>
-                </section>
+                  {/* Parametri regime dinamici */}
+                  <section style={{border:'1px solid #e2e8f0', borderRadius:16, background:'#fff'}}>
+                    <div style={{padding:'12px 16px', borderBottom:'1px solid #e2e8f0', fontWeight:600}}>Parametri regime: {regimes[profile.regime]?.label}</div>
+                    <div style={{padding:16, display:'grid', gridTemplateColumns: viewport==='mobile' ? '1fr' : viewport==='tablet' ? 'repeat(2, minmax(0,1fr))' : 'repeat(3, minmax(0,1fr))', gap:16}}>
+                      {/* Imposta alla fonte - SEMPRE visibile */}
+                      <PercentField
+                        id="srcRate"
+                        label="Imposta alla fonte CH"
+                        value={regimes[profile.regime]?.sourceTaxRate ?? 0}
+                        onChange={(v)=> setRegimes(prev=>({ ...prev, [profile.regime]: { ...prev[profile.regime], sourceTaxRate: v } }))}
+                        width={viewport==='mobile' ? '100%' : undefined}
+                      />
 
-                {/* Risultato */}
-                <section style={{border:'1px solid #e2e8f0', borderRadius:16, background:'#fff'}}>
-                  <div style={{padding:'12px 16px', borderBottom:'1px solid #e2e8f0', fontWeight:600}}>Risultato</div>
-                  <div style={{padding:16, display:'grid', gridTemplateColumns:'repeat(2, minmax(0,1fr))', gap:16}}>
-                    <SummaryItem label="Lordo annuo" value={fmtCHF(result.grossYear)} />
-                    <SummaryItem label="Contributi sociali" value={fmtCHF(result.social)} />
-                    <SummaryItem label="AHV/IV/EO" value={fmtCHF(result.ahv)} />
-                    <SummaryItem label="ALV" value={fmtCHF(result.alv)} />
-                    <SummaryItem label="LPP" value={fmtCHF(result.lpp)} />
-                    <SummaryItem label="Infortuni NBU" value={fmtCHF(result.nbu)} />
-                    <SummaryItem label="Imponibile CH" value={fmtCHF(result.taxableCH)} />
-                    <SummaryItem label="Imposta alla fonte CH" value={fmtCHF(result.sourceTax)} />
+                      {/* Nota vecchio frontaliero */}
+                      {profile.regime==='FR_IT_OLD' && (
+                        <div style={{gridColumn:'1 / -1', background:'#fffbeb', border:'1px solid #fde68a', borderRadius:12, padding:12, color:'#92400e', fontSize:14}}>
+                          Vecchio Frontaliero: <b>tassazione esclusiva in Svizzera</b>. IRPEF Italia non dovuta nel modello semplificato.
+                        </div>
+                      )}
 
-                    {(profile.residenceCountry==='IT' && profile.regime==='FR_IT_NEW') && (
-                      <>
-                        <SummaryItem label="IRPEF Italia netta" value={fmtCHF(result.itIrpefNetCHF)} />
-                        <SummaryItem label="Addizionali Italia" value={fmtCHF(result.itAddizCHF)} />
-                      </>
-                    )}
+                      {/* Parametri specifici NUOVO frontaliero (Italia) */}
+                      {profile.regime==='FR_IT_NEW' && (
+                        <>
+                          <PercentField
+                            id="srcFactor"
+                            label="Quota imposta alla fonte (80%)"
+                            value={regimes.FR_IT_NEW.sourceFactor ?? 0}
+                            onChange={(v)=> setRegimes(prev=>({ ...prev, FR_IT_NEW: { ...prev.FR_IT_NEW, sourceFactor: v } }))}
+                            width={viewport==='mobile' ? '100%' : undefined}
+                          />
+                          <NumberField
+                            id="itAllowance"
+                            label="Franchigia italiana"
+                            value={regimes.FR_IT_NEW.itAllowanceEUR ?? 0}
+                            onChange={(v)=> setRegimes(prev=>({ ...prev, FR_IT_NEW: { ...prev.FR_IT_NEW, itAllowanceEUR: v } }))}
+                            suffix="EUR"
+                            step={100}
+                            width={viewport==='mobile' ? '100%' : undefined}
+                          />
+                          <PercentField
+                            id="itEff"
+                            label="Aliquota IRPEF eff."
+                            value={regimes.FR_IT_NEW.itEffRate ?? 0}
+                            onChange={(v)=> setRegimes(prev=>({ ...prev, FR_IT_NEW: { ...prev.FR_IT_NEW, itEffRate: v } }))}
+                            width={viewport==='mobile' ? '100%' : undefined}
+                          />
+                          <PercentField
+                            id="itCredShare"
+                            label="Quota credito"
+                            value={regimes.FR_IT_NEW.itTaxCreditShare ?? 0}
+                            onChange={(v)=> setRegimes(prev=>({ ...prev, FR_IT_NEW: { ...prev.FR_IT_NEW, itTaxCreditShare: v } }))}
+                            width={viewport==='mobile' ? '100%' : undefined}
+                          />
+                        </>
+                      )}
 
-                    {(profile.regime!=='RES_B' && profile.regime!=='RES_C') && (
-                      <SummaryItem label="Totale imposte paese di residenza" value={fmtCHF(result.homeTaxCHF)} />
-                    )}
+                      {/* Parametri per FR/DE */}
+                      {(profile.regime==='FR_DE' || profile.regime==='FR_FR') && (
+                        <>
+                          <PercentField
+                            id="homeRate"
+                            label="Aliquota paese di residenza (eff.)"
+                            value={regimes[profile.regime]?.homeTaxRate ?? 0}
+                            onChange={(v)=> setRegimes(prev=>({ ...prev, [profile.regime]: { ...prev[profile.regime], homeTaxRate: v } }))}
+                            width={viewport==='mobile' ? '100%' : undefined}
+                          />
+                          <PercentField
+                            id="creditShare"
+                            label="Quota credito su fonte"
+                            value={regimes[profile.regime]?.creditShare ?? 0}
+                            onChange={(v)=> setRegimes(prev=>({ ...prev, [profile.regime]: { ...prev[profile.regime], creditShare: v } }))}
+                            width={viewport==='mobile' ? '100%' : undefined}
+                          />
+                        </>
+                      )}
+                    </div>
+                  </section>
 
-                    <SummaryItem label="Credito per imposta CH" value={fmtCHF(result.creditCHF)} />
-                    <SummaryItem label="Totale oneri" value={fmtCHF(result.totalTax)} />
-                    <SummaryItem label="Netto annuo" value={fmtCHF(result.netYear)} highlight />
-                    <SummaryItem label="Netto mensile" value={fmtCHF(result.netMonthly)} highlight big />
-                  </div>
-                </section>
+                  {/* Risultato */}
+                  <section style={{border:'1px solid #e2e8f0', borderRadius:16, background:'#fff'}}>
+                    <div style={{padding:'12px 16px', borderBottom:'1px solid #e2e8f0', fontWeight:600}}>Risultato</div>
+                    <div style={{padding:16, display:'grid', gridTemplateColumns:'repeat(2, minmax(0,1fr))', gap:16}}>
+                      <SummaryItem label="Lordo annuo" value={fmtCHF(result.grossYear)} />
+                      <SummaryItem label="Contributi sociali" value={fmtCHF(result.social)} />
+                      <SummaryItem label="AHV/IV/EO" value={fmtCHF(result.ahv)} />
+                      <SummaryItem label="ALV" value={fmtCHF(result.alv)} />
+                      <SummaryItem label="LPP" value={fmtCHF(result.lpp)} />
+                      <SummaryItem label="Infortuni NBU" value={fmtCHF(result.nbu)} />
+                      <SummaryItem label="Imponibile CH" value={fmtCHF(result.taxableCH)} />
+                      <SummaryItem label="Imposta alla fonte CH" value={fmtCHF(result.sourceTax)} />
 
-              </main>
-            </div>
-          ); })()}
+                      {(profile.residenceCountry==='IT' && profile.regime==='FR_IT_NEW') && (
+                        <>
+                          <SummaryItem label="IRPEF Italia netta" value={fmtCHF(result.itIrpefNetCHF)} />
+                          <SummaryItem label="Addizionali Italia" value={fmtCHF(result.itAddizCHF)} />
+                        </>
+                      )}
+
+                      {(profile.regime!=='RES_B' && profile.regime!=='RES_C') && (
+                        <SummaryItem label="Totale imposte paese di residenza" value={fmtCHF(result.homeTaxCHF)} />
+                      )}
+
+                      <SummaryItem label="Credito per imposta CH" value={fmtCHF(result.creditCHF)} />
+                      <SummaryItem label="Totale oneri" value={fmtCHF(result.totalTax)} />
+                      <SummaryItem label="Netto annuo" value={fmtCHF(result.netYear)} highlight />
+                      <SummaryItem label="Netto mensile" value={fmtCHF(result.netMonthly)} highlight big />
+                    </div>
+                  </section>
+
+                </main>
+              </div>
+            );
+          })()}
         </div>
 
-{/* Footer debug */}
-{isDev && (
-  <div style={{maxWidth:1200, margin:'0 auto', padding:'12px 16px', fontSize:12, color:'#64748b'}}>
-    Regime: <b>{profile.regime}</b> • Residenza: <b>{profile.residenceCountry}</b> • Modalità: <b>{mode}</b> • Viewport: <b>{viewport}</b>
-  </div>
-)}
+        {/* Footer debug - SOLO in DEV */}
+        {isDev && (
+          <div style={{maxWidth:1200, margin:'0 auto', padding:'12px 16px', fontSize:12, color:'#64748b'}}>
+            Regime: <b>{profile.regime}</b> • Residenza: <b>{profile.residenceCountry}</b> • Modalità: <b>{mode}</b> • Viewport: <b>{viewport}</b>
+          </div>
+        )}
+      </div>
+    </ErrorBoundary>
+  );
+}
